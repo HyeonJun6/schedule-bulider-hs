@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자기주도활동 지도 계획 생성기</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-gray: #f8fafc;
+            --border-color: #cbd5e1;
+            --text-dark: #1e293b;
+            --sticky-bg: #fef08a;
+            --sticky-border: #fde047;
+            --sticky-text: #713f12;
+            --weekend-bg: #fef3c7;
+        }
+
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { margin: 0; padding: 20px; background-color: var(--bg-gray); color: var(--text-dark); }
+        
+        /* 웹 전체 가로 폭 확장 */
+        .container { max-width: 1650px; width: 96%; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        
+        .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); padding-bottom: 12px; margin-bottom: 15px; }
+        .header-bar h1 { margin: 0; font-size: 1.5rem; color: #0f172a; }
+        .auth-status { display: flex; align-items: center; gap: 10px; }
+        .mode-badge { padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; }
+        .mode-teacher { background: #e2e8f0; color: #475569; }
+        .mode-admin { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+        
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+        .tab-btn { padding: 10px 18px; border: none; background: none; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: #f1f5f9; padding: 16px; border-radius: 8px; margin-bottom: 15px; position: relative; }
+        .card h3 { margin-top: 0; font-size: 1.1rem; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; color: #0f172a; }
+        
+        label { display: block; margin-top: 8px; font-weight: 600; font-size: 0.88rem; }
+        input, select, textarea { width: 100%; padding: 7px; margin-top: 4px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.88rem; }
+        input:disabled, select:disabled, textarea:disabled { background-color: #e2e8f0; cursor: not-allowed; }
+
+        button { background: var(--primary); color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.88rem; margin-top: 8px; }
+        button:hover { background-color: var(--primary-hover); }
+        button:disabled { background-color: #94a3b8; cursor: not-allowed; }
+        button.secondary { background: #64748b; }
+        button.success { background: #16a34a; }
+        button.danger { background: #dc2626; }
+        button.warning { background: #d97706; }
+
+        /* 2줄 전용 버튼 스타일 */
+        .btn-two-line {
+            line-height: 1.25;
+            padding: 5px 10px;
+            text-align: center;
+            font-size: 0.82rem;
+            white-space: nowrap;
+            min-width: 68px;
+            margin-top: 0;
+            flex-shrink: 0;
+        }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.85rem; }
+        th, td { border: 1px solid var(--border-color); padding: 7px 5px; text-align: center; vertical-align: middle; }
+        th { background: #e2e8f0; font-weight: 600; }
+        
+        .off-day { background-color: #fee2e2; color: #991b1b; }
+        .weekend-row { background-color: var(--weekend-bg); font-weight: 500; }
+        .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; background: #e2e8f0; margin: 1px; font-weight: 500; }
+        .actions { margin-top: 15px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        
+        /* 요일 체크박스 한 줄 정렬 강제 */
+        .weekday-checkboxes { display: flex; gap: 6px; margin-top: 6px; flex-wrap: nowrap; }
+        .weekday-checkboxes label { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 4px; 
+            margin-top: 0; 
+            font-weight: 600; 
+            font-size: 0.85rem; 
+            cursor: pointer; 
+            background: #ffffff; 
+            padding: 4px 8px; 
+            border-radius: 6px; 
+            border: 1px solid #cbd5e1;
+            white-space: nowrap;
+        }
+
+        .location-selector-inline {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 6px;
+            font-size: 0.82rem;
+            background: #ffffff;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+        }
+
+        .table-checkbox-group { display: flex; justify-content: center; gap: 5px; flex-wrap: nowrap; }
+        .table-checkbox-group label { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 3px; 
+            margin: 0; 
+            font-size: 0.82rem; 
+            cursor: pointer; 
+            font-weight: 600; 
+            background: #ffffff; 
+            padding: 2px 5px; 
+            border-radius: 4px; 
+            border: 1px solid #cbd5e1; 
+            white-space: nowrap;
+        }
+        .table-checkbox-group input { width: auto; margin: 0; }
+
+        .table-input {
+            padding: 4px 6px;
+            font-size: 0.85rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            width: 100%;
+            margin: 0;
+        }
+
+        .sticky-note {
+            background-color: var(--sticky-bg);
+            border: 1px solid var(--sticky-border);
+            color: var(--sticky-text);
+            padding: 14px;
+            border-radius: 8px;
+            box-shadow: 2px 3px 8px rgba(0,0,0,0.1);
+            position: relative;
+            margin-bottom: 15px;
+        }
+        .sticky-note::before {
+            content: "📌 알림";
+            display: block;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            border-bottom: 1px dashed #ca8a04;
+            padding-bottom: 3px;
+        }
+        .sticky-note p { margin: 4px 0; font-size: 0.85rem; line-height: 1.4; }
+        
+        .table-select { padding: 3px 5px; margin: 0; font-size: 0.82rem; width: 100%; }
+        .date-range-box { display: flex; align-items: center; gap: 3px; }
+        .date-range-box input { padding: 3px 4px; font-size: 0.8rem; }
+        .sub-box { background: white; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 12px; }
+
+        /* 모달 스타일 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.55);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(2px);
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            width: 500px;
+            max-width: 92%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+        .modal-header { font-size: 1.2rem; font-weight: bold; color: #0f172a; margin-bottom: 12px; border-bottom: 2px solid var(--primary); padding-bottom: 8px; }
+        .modal-checkbox-list { display: flex; flex-direction: column; gap: 10px; margin: 15px 0; }
+        .modal-checkbox-list label {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-weight: normal;
+            cursor: pointer;
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            transition: background-color 0.15s;
+        }
+        .modal-checkbox-list label:hover { background: #f1f5f9; }
+        .modal-checkbox-list input[type="checkbox"] { width: auto; margin-top: 3px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-bar">
+        <h1>자기주도활동 지도 계획 생성기</h1>
+        <div class="auth-status">
+            <span id="modeBadge" class="mode-badge mode-teacher">👁️ 교사 (열람 전용)</span>
+            <button id="authBtn" class="secondary" onclick="toggleAuth()">🔑 관리자 로그인</button>
+            <button class="danger admin-btn" onclick="openResetModal()">⚙️ 선택 데이터 초기화</button>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('settingTab', event)">1. 학사일정</button>
+        <button class="tab-btn" onclick="switchTab('teacherTab', event)">2. 교사 명단 관리</button>
+        <button class="tab-btn" onclick="switchTab('scheduleTab', event)">3. 감독 자동 배정기</button>
+        <button class="tab-btn" onclick="switchTab('statTab', event)">4. 배정 검증 및 통계</button>
+    </div>
+
+    <!-- 탭 1: 학사일정 관리 -->
+    <div id="settingTab" class="tab-content active">
+        <div class="grid-2">
+            <!-- 왼쪽: 학기 및 운영 종료일 -->
+            <div class="card">
+                <h3>학기 및 장소별 운영 종료일</h3>
+                <label>전체 학기 시작일</label>
+                <input type="date" id="startDate" value="2026-08-19" class="admin-input" onchange="saveDatesSettings()">
+                <label>전체 학기 종료일</label>
+                <input type="date" id="endDate" value="2027-01-08" class="admin-input" onchange="saveDatesSettings()">
+                
+                <hr style="margin: 15px 0; border: 0; border-top: 1px dashed #cbd5e1;">
+                
+                <label>🏢 기숙사 운영 종료일</label>
+                <input type="date" id="dormEndDate" value="2027-01-08" class="admin-input" onchange="saveDatesSettings()">
+
+                <label>📖 여학생정독실/1,2자습실 운영 종료일</label>
+                <input type="date" id="study12EndDate" value="2027-01-08" class="admin-input" onchange="saveDatesSettings()">
+
+                <label>🎓 3학년 자습실 운영 종료일</label>
+                <input type="date" id="study3EndDate" value="2026-11-17" class="admin-input" onchange="saveDatesSettings()">
+
+                <button class="admin-btn success" style="margin-top: 15px; width: 100%;" onclick="saveDatesSettings(true)">💾 설정 저장</button>
+            </div>
+
+            <!-- 오른쪽: 근무 제외일 추가 및 관리 -->
+            <div class="card">
+                <h3>근무 제외일 추가 / 삭제</h3>
+                
+                <!-- 추가 기능 영역 -->
+                <div class="sub-box">
+                    <strong style="font-size:0.9rem; color:#1e293b;">➕ 휴업일 추가 (단일 / 기간 / 일괄 입력)</strong>
+                    
+                    <!-- 단일 추가 -->
+                    <div style="display: flex; gap: 6px; margin-top: 8px; align-items: center;">
+                        <input type="date" id="singleHolidayDate" class="admin-input" style="flex: 1.2; min-width: 120px;">
+                        <input type="text" id="singleHolidayNote" placeholder="사유 (예: 추석연휴)" class="admin-input" style="flex: 2;">
+                        <button class="admin-btn btn-two-line" onclick="addSingleHoliday()">단일<br>추가</button>
+                    </div>
+                    <div class="location-selector-inline">
+                        <span style="font-weight: 600; color: #475569;">적용 장소:</span>
+                        <label style="cursor:pointer;"><input type="checkbox" name="locSingle" value="ALL" checked onchange="toggleLocAll('locSingle', this)" class="admin-input" style="width:auto;"> 전체</label>
+                        <label style="cursor:pointer;"><input type="checkbox" name="locSingle" value="DORM" onchange="toggleLocItem('locSingle', this)" class="admin-input" style="width:auto;"> 기숙사</label>
+                        <label style="cursor:pointer;"><input type="checkbox" name="locSingle" value="STUDY_12" onchange="toggleLocItem('locSingle', this)" class="admin-input" style="width:auto;"> 여학생정독실/1,2자습실</label>
+                        <label style="cursor:pointer;"><input type="checkbox" name="locSingle" value="STUDY_3" onchange="toggleLocItem('locSingle', this)" class="admin-input" style="width:auto;"> 3학년 자습실</label>
+                    </div>
+
+                    <!-- 기간 추가 -->
+                    <div style="display: flex; gap: 6px; margin-top: 12px; align-items: center;">
+                        <input type="date" id="rangeHolidayStart" class="admin-input" style="flex: 1; min-width: 110px;">
+                        <span style="font-size: 0.85rem; font-weight: bold;">~</span>
+                        <input type="date" id="rangeHolidayEnd" class="admin-input" style="flex: 1; min-width: 110px;">
+                        <input type="text" id="rangeHolidayNote" placeholder="사유" class="admin-input" style="flex: 1.1; min-width: 80px;">
+                        <button class="admin-btn warning btn-two-line" onclick="addRangeHoliday()">기간<br>추가</button>
+                    </div>
+                    <div class="location-selector-inline">
+                        <span style="font-weight: 600; color: #475569;">적용 장소:</span>
+                        <label style="cursor:pointer;"><input type="checkbox" name="locRange" value="ALL" checked onchange="toggleLocAll('locRange', this)" class="admin-input" style="width:auto;"> 전체</label>
+                        <label style="cursor:pointer;"><input type="checkbox" name="locRange" value="DORM" onchange="toggleLocItem('locRange', this)" class="admin-input" style="width:auto;"> 기숙사</label>
+                        <label style="cursor:pointer;"><input type="checkbox" name="locRange" value="STUDY_12" onchange="toggleLocItem('locRange', this)" class="admin-input" style="width:auto;"> 여학생정독실/1,2자습실</label>
+                        <label style="cursor:pointer;"><input type="checkbox" name="locRange" value="STUDY_3" onchange="toggleLocItem('locRange', this)" class="admin-input" style="width:auto;"> 3학년 자습실</label>
+                    </div>
+
+                    <!-- 일괄 추가 -->
+                    <div style="margin-top: 12px;">
+                        <textarea id="bulkHolidaysInput" rows="2" class="admin-input" placeholder="복수/일괄 입력 (형식: YYYY-MM-DD: 사유 또는 YYYY-MM-DD: [장소] 사유&#10;예: 2026-09-23: [기숙사] 추석연휴)"></textarea>
+                        <button class="admin-btn secondary" style="width: 100%; margin-top: 4px;" onclick="addBulkHolidays()">일괄 텍스트 추가</button>
+                    </div>
+                </div>
+
+                <!-- 삭제 기능 영역 -->
+                <div class="sub-box" style="background:#fff5f5; border-color:#fecaca;">
+                    <strong style="font-size:0.9rem; color:#991b1b;">➖ 휴업일 삭제 (기간별 삭제 / 선택 삭제 / 전체 초기화)</strong>
+                    <div style="display: flex; gap: 6px; margin-top: 8px; align-items: center;">
+                        <input type="date" id="deleteRangeStart" class="admin-input" style="flex: 1; min-width: 110px;">
+                        <span style="font-size: 0.85rem; font-weight: bold;">~</span>
+                        <input type="date" id="deleteRangeEnd" class="admin-input" style="flex: 1; min-width: 110px;">
+                        <button class="admin-btn danger btn-two-line" onclick="deleteRangeHolidays()">해당기간<br>삭제</button>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 10px;">
+                        <button class="admin-btn danger" style="flex: 1; margin-top:0;" onclick="deleteSelectedHolidays()">선택 항목 삭제</button>
+                        <button class="admin-btn danger" style="flex: 1; margin-top:0; background:#991b1b;" onclick="clearAllHolidays()">휴업일 전체 초기화</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 등록된 휴업일 리스트 목록 -->
+        <div class="card">
+            <h3>등록된 휴업일 목록 (<span id="holidayCount">0</span>건)</h3>
+            <p style="font-size: 0.8rem; color: #64748b; margin-top: -5px;">
+                * 목록 내에서 날짜, 적용 장소, 휴업/제외 사유를 직접 클릭하여 즉시 수정할 수 있습니다.
+            </p>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 5%;"><input type="checkbox" id="selectAllHolidays" onchange="toggleSelectAllHolidays(this.checked)" class="admin-input"></th>
+                        <th style="width: 18%;">날짜</th>
+                        <th style="width: 42%;">적용 장소</th>
+                        <th style="width: 25%;">휴업/제외 사유</th>
+                        <th style="width: 10%;">관리</th>
+                    </tr>
+                </thead>
+                <tbody id="holidayTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 탭 2: 교사 명단 관리 -->
+    <div id="teacherTab" class="tab-content">
+        <div class="card">
+            <h3>명단 등록</h3>
+            <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px;">
+                <div style="flex: 1; min-width: 130px;">
+                    <label>배정 대상 장소</label>
+                    <select id="targetLocation" class="admin-input">
+                        <option value="DORM">기숙사</option>
+                        <option value="STUDY_12">여학생정독실/1,2자습실</option>
+                        <option value="STUDY_3">3학년 자습실</option>
+                    </select>
+                </div>
+                <div style="flex: 0.9; min-width: 100px;">
+                    <label>교사 이름</label>
+                    <input type="text" id="teacherName" placeholder="예: 홍길동" class="admin-input">
+                </div>
+                <div style="flex: 1.2; min-width: 150px;">
+                    <label>근무 상태 / 제외 사유</label>
+                    <select id="teacherRole" class="admin-input" onchange="toggleExcludeReasonInput(this.value)">
+                        <option value="NORMAL">근무 가능</option>
+                        <option value="EXCLUDE_GATE">근무 제외 (교문지도)</option>
+                        <option value="EXCLUDE_LUNCH">근무 제외 (급식)</option>
+                        <option value="EXCLUDE_CUSTOM">근무 제외 (직접 입력)</option>
+                    </select>
+                </div>
+                <div id="customReasonBox" style="flex: 1; min-width: 120px; display: none;">
+                    <label>직접 입력 사유</label>
+                    <input type="text" id="teacherExcludeCustom" placeholder="사유 입력 (예: 연로, 건강상 이유)" class="admin-input">
+                </div>
+                <div style="flex: 1.2; min-width: 145px; white-space: nowrap;">
+                    <label style="cursor: pointer; margin-top: 0; white-space: nowrap; font-size: 0.85rem;">
+                        <input type="checkbox" id="prevSemesterEndCheck" class="admin-input" style="width:auto; vertical-align: middle;"> 지난 학기 말 근무
+                    </label>
+                </div>
+                <div style="flex: 2.2; min-width: 290px;">
+                    <label>근무 불가 요일</label>
+                    <div class="weekday-checkboxes">
+                        <label><input type="checkbox" class="off-day-check admin-input" value="월">월</label>
+                        <label><input type="checkbox" class="off-day-check admin-input" value="화">화</label>
+                        <label><input type="checkbox" class="off-day-check admin-input" value="수">수</label>
+                        <label><input type="checkbox" class="off-day-check admin-input" value="목">목</label>
+                        <label><input type="checkbox" class="off-day-check admin-input" value="금">금</label>
+                    </div>
+                </div>
+                <div style="flex: 2; min-width: 240px;">
+                    <label>근무 불가 기간 (병결/경조사 등)</label>
+                    <div class="date-range-box">
+                        <input type="date" id="regLeaveStart" class="admin-input">
+                        ~
+                        <input type="date" id="regLeaveEnd" class="admin-input">
+                    </div>
+                </div>
+                <button class="admin-btn" style="white-space: nowrap; min-width: 80px;" onclick="addTeacher()">추가</button>
+            </div>
+        </div>
+
+        <h3>전체 교사 명단 (<span id="teacherCount">0</span>명 - 장소별 가나다순 정렬)</h3>
+        <p style="font-size: 0.8rem; color: #64748b; margin-top: -5px;">
+            * 명단 내에서 장소, 근무 상태/제외 사유, 지난 학기 말 근무 여부, 불가 요일, 근무 불가 기간을 즉시 수정할 수 있습니다.
+        </p>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 13%;">배정 대상 장소</th>
+                    <th style="width: 9%;">이름</th>
+                    <th style="width: 15%;">근무 상태 / 제외 사유</th>
+                    <th style="width: 11%; white-space: nowrap;">지난 학기 말 근무</th>
+                    <th style="width: 22%;">근무 불가 요일</th>
+                    <th style="width: 22%;">근무 불가 기간</th>
+                    <th style="width: 8%;">관리</th>
+                </tr>
+            </thead>
+            <tbody id="teacherTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- 탭 3: 감독 자동 배정기 -->
+    <div id="scheduleTab" class="tab-content">
+        <div class="card" style="background: #eff6ff; border: 1px solid #bfdbfe;">
+            <h3>➕ 주말 / 공휴일 근무일 추가 (수동 배정)</h3>
+            <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+                <div style="width: 150px;">
+                    <label>근무 날짜</label>
+                    <input type="date" id="specialDate" class="admin-input">
+                </div>
+                <div style="width: 170px;">
+                    <label>근무 장소</label>
+                    <select id="specialLoc" class="admin-input">
+                        <option value="DORM">기숙사</option>
+                        <option value="STUDY_12">여학생정독실/1,2자습실</option>
+                        <option value="STUDY_3">3학년 자습실</option>
+                    </select>
+                </div>
+                <div style="flex: 1; min-width: 180px;">
+                    <label>비고/사유</label>
+                    <input type="text" id="specialNote" placeholder="예: 주말 기숙사 감독" class="admin-input">
+                </div>
+                <button class="admin-btn" onclick="addSpecialDutyDate()">근무일 추가</button>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="success admin-btn" onclick="confirmAndGenerateSchedule('ALL')">🎲 전체 장소 동시 배정</button>
+            <button class="admin-btn" style="background-color: #0284c7;" onclick="confirmAndGenerateSchedule('DORM')">🏢 기숙사만 배정</button>
+            <button class="admin-btn" style="background-color: #0d9488;" onclick="confirmAndGenerateSchedule('STUDY_12')">📖 여학생정독실/1,2자습실만 배정</button>
+            <button class="admin-btn" style="background-color: #4f46e5;" onclick="confirmAndGenerateSchedule('STUDY_3')">🎓 3학년 자습실만 배정</button>
+            <button class="secondary" onclick="exportCSV()">📥 CSV 내보내기</button>
+        </div>
+
+        <div id="scheduleStickyNoteContainer"></div>
+
+        <table id="scheduleTable">
+            <thead>
+                <tr>
+                    <th style="width: 6%;">월</th>
+                    <th style="width: 6%;">일</th>
+                    <th style="width: 7%;">요일</th>
+                    <th style="width: 25%;">기숙사</th>
+                    <th style="width: 25%;">여학생정독실/1,2자습실</th>
+                    <th style="width: 20%;">3학년 자습실</th>
+                    <th style="width: 11%;">비고</th>
+                </tr>
+            </thead>
+            <tbody id="scheduleTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- 탭 4: 배정 검증 및 통계 -->
+    <div id="statTab" class="tab-content">
+        <div id="statStickyNoteContainer"></div>
+
+        <div class="card">
+            <h3>공정성 검증 요약 (배정원칙 및 필요일수)</h3>
+            <table id="summaryTable">
+                <thead>
+                    <tr>
+                        <th>구분</th>
+                        <th>운영 종료일</th>
+                        <th>필요 근무일(총 석)</th>
+                        <th>배정 가능 인원</th>
+                        <th>1인당 평균 근무일</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryTableBody"></tbody>
+            </table>
+        </div>
+
+        <h3>교사별 근무 횟수 현황 & 배정 검증</h3>
+        <table>
+            <thead>
+                <tr id="statTableHeader">
+                    <th>장소</th>
+                    <th>이름</th>
+                    <th>총 근무 횟수</th>
+                    <th>금요일 근무 횟수</th>
+                    <th>설정된 불가 요일/기간</th>
+                    <th>배정 상태 및 검증 사유</th>
+                </tr>
+            </thead>
+            <tbody id="teacherStatBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 데이터 선택 초기화 모달 -->
+<div id="resetModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">⚙️ 데이터 선택 초기화</div>
+        <p style="font-size: 0.88rem; color: #475569; margin-top: 0;">초기화할 항목을 체크박스로 선택해 주세요. (기본은 전체 선택)</p>
+        
+        <div class="modal-checkbox-list">
+            <label>
+                <input type="checkbox" id="chkResetSettings" checked>
+                <div>
+                    <strong style="color:#0f172a;">📅 학사일정 및 휴업일 목록 초기화</strong><br>
+                    <small style="color:#64748b;">전체 학기 날짜, 장소별 종료일 및 휴업일 목록을 기본값으로 리셋합니다.</small>
+                </div>
+            </label>
+            <label>
+                <input type="checkbox" id="chkResetSchedule" checked>
+                <div>
+                    <strong style="color:#0f172a;">📋 감독 배정표 초기화</strong><br>
+                    <small style="color:#64748b;">자동 생성된 감독 배정 결과 및 주말/공휴일 특별근무 설정을 삭제합니다.</small>
+                </div>
+            </label>
+            <label>
+                <input type="checkbox" id="chkResetConstraints" checked>
+                <div>
+                    <strong style="color:#0f172a;">🗓️ 교사별 근무 불가 요일/기간 초기화</strong><br>
+                    <small style="color:#64748b;">각 교사별로 지정되었던 불가 요일 및 병결/경조사 기간 설정을 지웁니다.</small>
+                </div>
+            </label>
+        </div>
+
+        <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px 12px; border-radius: 6px; font-size: 0.82rem; color: #166534; line-height: 1.4;">
+            🛡️ <strong>안내:</strong> 어떤 옵션을 선택하더라도 <strong>교직원 명단(배정 장소, 이름, 근무 상태)은 유지</strong>됩니다.
+        </div>
+
+        <div class="modal-footer">
+            <button class="secondary" onclick="closeResetModal()">취소</button>
+            <button class="danger" onclick="executeSelectedReset()">초기화 실행</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ADMIN_PW = "1954";
+    const STORAGE_KEY = "SCHEDULE_BUILDER_DATA_V4";
+    let isAdmin = false;
+
+    const defaultSettings = {
+        startDate: "2026-08-19",
+        endDate: "2027-01-08",
+        dormEndDate: "2027-01-08",
+        study12EndDate: "2027-01-08",
+        study3EndDate: "2026-11-17"
+    };
+
+    const defaultHolidays = [
+        { id: 1, dateStr: "2026-09-23", reason: "추석연휴", locs: ["ALL"] },
+        { id: 2, dateStr: "2026-09-24", reason: "추석연휴", locs: ["ALL"] },
+        { id: 3, dateStr: "2026-10-05", reason: "대체공휴일", locs: ["ALL"] },
+        { id: 4, dateStr: "2026-11-19", reason: "수능", locs: ["ALL"] }
+    ];
+
+    const defaultTeachers = [
+        { id: 1, name: "강래명", exclude: "교문지도", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 2, name: "김기완", exclude: "교문지도", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 3, name: "이지호", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 4, name: "박철규", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 5, name: "안정애", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 6, name: "김성호", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: true, leaveStart: "", leaveEnd: "" },
+        { id: 7, name: "정혜섭", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 8, name: "이태영", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 9, name: "정주영", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 10, name: "김수연", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 11, name: "이경민", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 12, name: "김승권", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 13, name: "신지현", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 14, name: "정광진", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 15, name: "방형협", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 16, name: "최종문", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 17, name: "송제택", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 18, name: "이우선", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 19, name: "윤혜경", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 20, name: "유석만", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 21, name: "이승영", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 22, name: "임준", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 23, name: "백승혁", exclude: "", loc: "DORM", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+
+        { id: 24, name: "조정혜", exclude: "", loc: "STUDY_12", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 25, name: "노정은", exclude: "", loc: "STUDY_12", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 26, name: "이은재", exclude: "", loc: "STUDY_12", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 27, name: "정소은", exclude: "", loc: "STUDY_12", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 28, name: "윤해님", exclude: "", loc: "STUDY_12", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 29, name: "오송이", exclude: "", loc: "STUDY_12", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 30, name: "정은영", exclude: "", loc: "STUDY_12", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 31, name: "김보경", exclude: "", loc: "STUDY_12", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 32, name: "지정민", exclude: "", loc: "STUDY_12", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 33, name: "김가영", exclude: "", loc: "STUDY_12", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 34, name: "배현주", exclude: "", loc: "STUDY_12", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 35, name: "임은실", exclude: "", loc: "STUDY_12", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 36, name: "정혜진", exclude: "", loc: "STUDY_12", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 37, name: "김소연", exclude: "", loc: "STUDY_12", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 38, name: "정다운", exclude: "", loc: "STUDY_12", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 39, name: "박신영", exclude: "", loc: "STUDY_12", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 40, name: "김유미", exclude: "", loc: "STUDY_12", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+
+        { id: 41, name: "박수선", exclude: "", loc: "STUDY_3", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 42, name: "김양현", exclude: "", loc: "STUDY_3", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 43, name: "권희진", exclude: "", loc: "STUDY_3", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 44, name: "박보라", exclude: "", loc: "STUDY_3", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 45, name: "박은혜", exclude: "", loc: "STUDY_3", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 46, name: "장금주", exclude: "", loc: "STUDY_3", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 47, name: "이영민", exclude: "", loc: "STUDY_3", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 48, name: "김성현", exclude: "", loc: "STUDY_3", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 49, name: "김병준", exclude: "", loc: "STUDY_3", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 50, name: "신현준", exclude: "", loc: "STUDY_3", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" },
+        { id: 51, name: "박지원", exclude: "", loc: "STUDY_3", offDays: [], prevSemesterEnd: false, leaveStart: "", leaveEnd: "" }
+    ];
+
+    let settings = { ...defaultSettings };
+    let holidays = [ ...defaultHolidays ];
+    let teachers = [ ...defaultTeachers ];
+    let specialDutyDates = [];
+    let generatedSchedule = [];
+    let nextHolidayId = 100;
+    let nextTeacherId = 100;
+
+    const locOrderMap = { DORM: 1, STUDY_12: 2, STUDY_3: 3 };
+    const locNameMap = { ALL: "전체", DORM: "기숙사", STUDY_12: "여학생정독실/1,2자습실", STUDY_3: "3학년 자습실" };
+
+    function saveStateToLocalStorage() {
+        const stateData = {
+            settings,
+            holidays,
+            teachers,
+            specialDutyDates,
+            generatedSchedule,
+            nextHolidayId,
+            nextTeacherId
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(stateData));
+    }
+
+    function loadStateFromLocalStorage() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                settings = data.settings || { ...defaultSettings };
+                holidays = data.holidays ? data.holidays.map(h => ({ ...h, locs: h.locs || ['ALL'] })) : [ ...defaultHolidays ];
+                teachers = data.teachers || [ ...defaultTeachers ];
+                specialDutyDates = data.specialDutyDates || [];
+                generatedSchedule = data.generatedSchedule || [];
+                nextHolidayId = data.nextHolidayId || 100;
+                nextTeacherId = data.nextTeacherId || 100;
+            } catch(e) {
+                console.error("저장된 데이터 로드 실패", e);
+            }
+        }
+        updateDateInputsUI();
+    }
+
+    function updateDateInputsUI() {
+        document.getElementById('startDate').value = settings.startDate;
+        document.getElementById('endDate').value = settings.endDate;
+        document.getElementById('dormEndDate').value = settings.dormEndDate;
+        document.getElementById('study12EndDate').value = settings.study12EndDate;
+        document.getElementById('study3EndDate').value = settings.study3EndDate;
+    }
+
+    /* 데이터 선택 초기화 모달 제어 */
+    function openResetModal() {
+        if (!isAdmin) return alert("🔒 관리자 권한이 필요합니다.");
+        document.getElementById('chkResetSettings').checked = true;
+        document.getElementById('chkResetSchedule').checked = true;
+        document.getElementById('chkResetConstraints').checked = true;
+        document.getElementById('resetModal').classList.add('active');
+    }
+
+    function closeResetModal() {
+        document.getElementById('resetModal').classList.remove('active');
+    }
+
+    function executeSelectedReset() {
+        if (!isAdmin) return alert("🔒 관리자 권한이 필요합니다.");
+
+        const resetSettings = document.getElementById('chkResetSettings').checked;
+        const resetSchedule = document.getElementById('chkResetSchedule').checked;
+        const resetConstraints = document.getElementById('chkResetConstraints').checked;
+
+        if (!resetSettings && !resetSchedule && !resetConstraints) {
+            return alert("⚠️ 초기화할 항목을 최소 하나 이상 선택해 주세요.");
+        }
+
+        let resetMsgList = [];
+
+        // 1. 학사일정 및 휴업일 초기화
+        if (resetSettings) {
+            settings = { ...defaultSettings };
+            holidays = [ ...defaultHolidays ];
+            nextHolidayId = 100;
+            resetMsgList.push("학사일정 및 휴업일");
+        }
+
+        // 2. 감독 배정표 초기화
+        if (resetSchedule) {
+            specialDutyDates = [];
+            generatedSchedule = [];
+            resetMsgList.push("감독 배정표 및 특별근무");
+        }
+
+        // 3. 교사 근무 불가 요일/기간 초기화
+        if (resetConstraints) {
+            teachers = teachers.map(t => ({
+                ...t,
+                offDays: [],
+                leaveStart: "",
+                leaveEnd: ""
+            }));
+            resetMsgList.push("교사 근무 불가 요일/기간");
+        }
+
+        /* [핵심] 교직원 명단(teachers 배열 자체)은 절대 삭제하거나 덮어쓰지 않고 항상유지 */
+
+        saveStateToLocalStorage();
+        renderAllViews();
+        closeResetModal();
+
+        alert(`✅ 선택하신 [${resetMsgList.join(', ')}] 항목이 성공적으로 초기화되었습니다.\n\n(※ 등록된 교직원 명단은 유지됩니다.)`);
+    }
+
+    function resetAllDataToDefault() {
+        openResetModal();
+    }
+
+    function toggleAuth() {
+        if (!isAdmin) {
+            const inputPw = prompt("🔒 관리자 비밀번호를 입력하세요:");
+            if (inputPw === ADMIN_PW) {
+                isAdmin = true;
+                alert("🔓 관리자로 전환되었습니다.");
+            } else if (inputPw !== null) {
+                alert("❌ 비밀번호가 올바르지 않습니다.");
+            }
+        } else {
+            isAdmin = false;
+            alert("🔒 교사 (열람 전용)로 전환되었습니다.");
+        }
+        updateAdminUI();
+    }
+
+    function updateAdminUI() {
+        const badge = document.getElementById("modeBadge");
+        const btn = document.getElementById("authBtn");
+        
+        if (isAdmin) {
+            badge.className = "mode-badge mode-admin";
+            badge.innerText = "🔓 관리자 (수정 가능)";
+            btn.innerText = "🔒 로그아웃";
+        } else {
+            badge.className = "mode-badge mode-teacher";
+            badge.innerText = "👁️ 교사 (열람 전용)";
+            btn.innerText = "🔑 관리자 로그인";
+        }
+
+        document.querySelectorAll(".admin-input").forEach(el => el.disabled = !isAdmin);
+        document.querySelectorAll(".admin-btn").forEach(el => el.disabled = !isAdmin);
+
+        renderAllViews();
+    }
+
+    function switchTab(tabId, evt) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if (evt && evt.target) evt.target.classList.add('active');
+    }
+
+    function saveDatesSettings(showMsg = false) {
+        if (!isAdmin) return;
+        settings.startDate = document.getElementById('startDate').value;
+        settings.endDate = document.getElementById('endDate').value;
+        settings.dormEndDate = document.getElementById('dormEndDate').value;
+        settings.study12EndDate = document.getElementById('study12EndDate').value;
+        settings.study3EndDate = document.getElementById('study3EndDate').value;
+        
+        saveStateToLocalStorage();
+        if (showMsg) alert("💾 학기 및 장소별 운영 종료일이 저장되었습니다.");
+    }
+
+    function toggleLocAll(groupName, el) {
+        const checkboxes = document.querySelectorAll(`input[name="${groupName}"]`);
+        if (el.checked) {
+            checkboxes.forEach(cb => { if (cb.value !== 'ALL') cb.checked = false; });
+        }
+    }
+
+    function toggleLocItem(groupName, el) {
+        const checkboxes = document.querySelectorAll(`input[name="${groupName}"]`);
+        const allCb = Array.from(checkboxes).find(cb => cb.value === 'ALL');
+        if (el.checked && allCb) {
+            allCb.checked = false;
+        }
+    }
+
+    function getSelectedLocs(groupName) {
+        const checkboxes = document.querySelectorAll(`input[name="${groupName}"]:checked`);
+        const values = Array.from(checkboxes).map(cb => cb.value);
+        return values.length === 0 ? ['ALL'] : values;
+    }
+
+    function renderHolidaysTable() {
+        holidays.sort((a, b) => a.dateStr.localeCompare(b.dateStr));
+        const tbody = document.getElementById('holidayTableBody');
+        tbody.innerHTML = '';
+        document.getElementById('holidayCount').innerText = holidays.length;
+
+        holidays.forEach(h => {
+            const locs = h.locs || ['ALL'];
+            const isAll = locs.includes('ALL');
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="checkbox" class="holiday-select-cb admin-input" value="${h.id}" ${!isAdmin ? 'disabled' : ''}></td>
+                <td>
+                    <input type="date" value="${h.dateStr}" class="admin-input table-input" 
+                        onchange="updateHolidayDate(${h.id}, this.value)" ${!isAdmin ? 'disabled' : ''}>
+                </td>
+                <td>
+                    <div class="table-checkbox-group">
+                        <label><input type="checkbox" class="admin-input" ${isAll ? 'checked' : ''} onchange="toggleHolidayLoc(${h.id}, 'ALL', this.checked)" ${!isAdmin ? 'disabled' : ''}> 전체</label>
+                        <label><input type="checkbox" class="admin-input" ${!isAll && locs.includes('DORM') ? 'checked' : ''} onchange="toggleHolidayLoc(${h.id}, 'DORM', this.checked)" ${!isAdmin ? 'disabled' : ''}> 기숙사</label>
+                        <label><input type="checkbox" class="admin-input" ${!isAll && locs.includes('STUDY_12') ? 'checked' : ''} onchange="toggleHolidayLoc(${h.id}, 'STUDY_12', this.checked)" ${!isAdmin ? 'disabled' : ''}> 여학생정독실/1,2자습실</label>
+                        <label><input type="checkbox" class="admin-input" ${!isAll && locs.includes('STUDY_3') ? 'checked' : ''} onchange="toggleHolidayLoc(${h.id}, 'STUDY_3', this.checked)" ${!isAdmin ? 'disabled' : ''}> 3학년 자습실</label>
+                    </div>
+                </td>
+                <td>
+                    <input type="text" value="${h.reason || ''}" placeholder="사유 입력" class="admin-input table-input" 
+                        onchange="updateHolidayReason(${h.id}, this.value)" ${!isAdmin ? 'disabled' : ''}>
+                </td>
+                <td>
+                    <button class="danger admin-btn" style="padding: 2px 6px; font-size: 0.78rem;" onclick="deleteHoliday(${h.id})" ${!isAdmin ? 'disabled' : ''}>삭제</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function updateHolidayDate(id, newDateStr) {
+        if (!isAdmin) return;
+        const h = holidays.find(item => item.id === id);
+        if (h && newDateStr) {
+            h.dateStr = newDateStr;
+            saveStateToLocalStorage();
+            renderHolidaysTable();
+        }
+    }
+
+    function updateHolidayReason(id, newReason) {
+        if (!isAdmin) return;
+        const h = holidays.find(item => item.id === id);
+        if (h) {
+            h.reason = newReason;
+            saveStateToLocalStorage();
+        }
+    }
+
+    function toggleHolidayLoc(id, locCode, isChecked) {
+        if (!isAdmin) return;
+        const h = holidays.find(item => item.id === id);
+        if (!h) return;
+
+        if (!h.locs) h.locs = ['ALL'];
+
+        if (locCode === 'ALL') {
+            h.locs = ['ALL'];
+        } else {
+            h.locs = h.locs.filter(l => l !== 'ALL');
+            if (isChecked) {
+                if (!h.locs.includes(locCode)) h.locs.push(locCode);
+            } else {
+                h.locs = h.locs.filter(l => l !== locCode);
+            }
+            if (h.locs.length === 0) {
+                h.locs = ['ALL'];
+            }
+        }
+        saveStateToLocalStorage();
+        renderHolidaysTable();
+    }
+
+    function addSingleHoliday() {
+        if (!isAdmin) return alert("🔒 관리자 권한이 필요합니다.");
+        const dateStr = document.getElementById('singleHolidayDate').value;
+        const reason = document.getElementById('singleHolidayNote').value.trim() || "휴업일";
+        const locs = getSelectedLocs('locSingle');
+
+        if (!dateStr) return alert("날짜를 선택하세요.");
+        
+        holidays.push({ id: nextHolidayId++, dateStr, reason, locs });
+
+        document.getElementById('singleHolidayDate').value = '';
+        document.getElementById('singleHolidayNote').value = '';
+        saveStateToLocalStorage();
+        renderHolidaysTable();
+        alert(`✅ ${dateStr} (${locs.map(l => locNameMap[l]).join(', ')}) 제외일이 추가되었습니다.`);
+    }
+
+    function addRangeHoliday() {
+        if (!isAdmin) return alert("🔒 관리자 권한이 필요합니다.");
+        const startStr = document.getElementById('rangeHolidayStart').value;
+        const endStr = document.getElementById('rangeHolidayEnd').value;
+        const reason = document.getElementById('rangeHolidayNote').value.trim() || "휴업일";
+        const locs = getSelectedLocs('locRange');
+
+        if (!startStr || !endStr) return alert("시작일과 종료일을 모두 선택하세요.");
+        if (startStr > endStr) return alert("시작일이 종료일보다 늦을 수 없습니다.");
+
+        let cur = new Date(startStr);
+        const end = new Date(endStr);
+
+        while (cur <= end) {
+            const ds = cur.toISOString().split('T')[0];
+            holidays.push({ id: nextHolidayId++, dateStr: ds, reason, locs });
+            cur.setDate(cur.getDate() + 1);
+        }
+
+        document.getElementById('rangeHolidayStart').value = '';
+        document.getElementById('rangeHolidayEnd').value = '';
+        document.getElementById('rangeHolidayNote').value = '';
+        saveStateToLocalStorage();
+        renderHolidaysTable();
+        alert(`✅ ${startStr} ~ ${endStr} 기간에 제외일이 설정되었습니다.`);
+    }
+
+    function addBulkHolidays() {
+        if (!isAdmin) return alert("🔒 관리자 권한이 필요합니다.");
+        const rawText = document.getElementById('bulkHolidaysInput').value.trim();
+        if (!rawText) return alert("입력된 내용이 없습니다.");
+
+        const lines = rawText.split('\n');
+        let count = 0;
+
+        lines.forEach(line => {
+            const parts = line.split(':');
+            const dateStr = parts[0] ? parts[0].trim() : '';
+            let rest = parts.slice(1).join(':').trim();
+            let locs = ['ALL'];
+
+            if (rest) {
+                const locMatch = rest.match(/^\[(.*?)\]/);
+                if (locMatch) {
+                    const locTxt = locMatch[1].trim();
+                    if (locTxt.includes('기숙사')) locs = ['DORM'];
+                    else if (locTxt.includes('1,2') || locTxt.includes('여학생')) locs = ['STUDY_12'];
+                    else if (locTxt.includes('3학년')) locs = ['STUDY_3'];
+                    else if (locTxt.includes('전체')) locs = ['ALL'];
+                    
+                    rest = rest.replace(/^\[.*?\]/, '').trim();
+                }
+            }
+            const reason = rest || '휴업일';
+
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                holidays.push({ id: nextHolidayId++, dateStr, reason, locs });
+                count++;
+            }
+        });
+
+        document.getElementById('bulkHolidaysInput').value = '';
+        saveStateToLocalStorage();
+        renderHolidaysTable();
+        alert(`✅ 총 ${count}건의 휴업일/제외일이 일괄 추가되었습니다.`);
+    }
+
+    function deleteHoliday(id) {
+        if (!isAdmin) return alert("🔒 관리자 권한이 필요합니다.");
+        holidays = holidays.filter(h => h.id !== id);
+        saveStateToLocalStorage();
+        renderHolidaysTable();
+    }
+
+    function toggleSelectAllHolidays(checked) {
+        document.querySelectorAll('.holiday-select-cb').forEach(cb => cb.checked = checked);
+    }
+
+    function deleteSelectedHolidays() {
+        if (!isAdmin) return alert("🔒 관리자 권한이 필요합니다.");
+        const selectedIds = Array.from(document.querySelectorAll('.holiday-select-cb:checked')).map(cb => parseInt(cb.value));
+
+        if (selectedIds.length === 0) return alert("삭제할 항목을 선택하세요.");
+
+        if (confirm(`선택한 ${selectedIds.length}개의 제외일을 삭제하시겠습니까?`)) {
+            holidays = holidays.filter(h => !selectedIds.includes(h.id));
+            saveStateToLocalStorage();
+            renderHolidaysTable();
+            document.getElementById('selectAllHolidays').checked = false;
+        }
+    }
+
+    function deleteRangeHolidays() {
+        if (!isAdmin) return alert("🔒 관리자 권한이 필요합니다.");
+        const startStr = document.getElementById('deleteRangeStart').value;
+        const endStr = document.getElementById('deleteRangeEnd').value;
+
+        if (!startStr || !endStr) return alert("삭제할 기간의 시작일과 종료일을 지정하세요.");
+
+        if (confirm(`${startStr} ~ ${endStr} 기간 내 등록된 항목을 모두 삭제하시겠습니까?`)) {
+            const beforeLen = holidays.length;
+            holidays = holidays.filter(h => h.dateStr < startStr || h.dateStr > endStr);
+            const deleted = beforeLen - holidays.length;
+
+            document.getElementById('deleteRangeStart').value = '';
+            document.getElementById('deleteRangeEnd').value = '';
+            saveStateToLocalStorage();
+            renderHolidaysTable();
+            alert(`✅ 해당 기간 내 ${deleted}건이 삭제되었습니다.`);
+        }
+    }
+
+    function clearAllHolidays() {
+        if (!isAdmin) return alert("🔒 관리자 권한이 필요합니다.");
+        if (confirm("⚠️ 등록된 전체 목록을 완전히 삭제(초기화)하시겠습니까?")) {
+            holidays = [];
+            saveStateToLocalStorage();
+            renderHolidaysTable();
+            alert("✅ 모든 제외일이 삭제되었습니다.");
+        }
+    }
+
+    function toggleExcludeReasonInput(val) {
+        const box = document.getElementById('customReasonBox');
+        if (box) {
+            box.style.display = (val === 'EXCLUDE_CUSTOM') ? 'block' : 'none';
+        }
+    }
+
+    function sortTeachers() {
+        teachers.sort((a, b) => {
+            if (locOrderMap[a.loc] !== locOrderMap[b.loc]) {
+                return locOrderMap[a.loc] - locOrderMap[b.loc];
+            }
+            return a.name.localeCompare(b.name, 'ko');
+        });
+    }
+
+    function renderTeachers() {
+        sortTeachers();
+        const tbody = document.getElementById('teacherTableBody');
+        tbody.innerHTML = '';
+        document.getElementById('teacherCount').innerText = teachers.length;
+
+        const days = ['월', '화', '수', '목', '금'];
+
+        teachers.forEach((t) => {
+            const tr = document.createElement('tr');
+            
+            const locSelectHtml = `
+                <select class="table-select admin-input" onchange="updateTeacherLoc(${t.id}, this.value)" ${!isAdmin ? 'disabled' : ''}>
+                    <option value="DORM" ${t.loc === 'DORM' ? 'selected' : ''}>기숙사</option>
+                    <option value="STUDY_12" ${t.loc === 'STUDY_12' ? 'selected' : ''}>여학생정독실/1,2자습실</option>
+                    <option value="STUDY_3" ${t.loc === 'STUDY_3' ? 'selected' : ''}>3학년 자습실</option>
+                </select>
+            `;
+
+            let selVal = 'NORMAL';
+            if (t.exclude === '교문지도') selVal = 'EXCLUDE_GATE';
+            else if (t.exclude === '급식') selVal = 'EXCLUDE_LUNCH';
+            else if (t.exclude) selVal = 'EXCLUDE_CUSTOM';
+
+            const excludeSelectHtml = `
+                <div style="display:flex; flex-direction:column; gap:3px;">
+                    <select class="table-select admin-input" onchange="updateTeacherExclude(${t.id}, this.value)" ${!isAdmin ? 'disabled' : ''}>
+                        <option value="NORMAL" ${selVal === 'NORMAL' ? 'selected' : ''}>근무 가능</option>
+                        <option value="EXCLUDE_GATE" ${selVal === 'EXCLUDE_GATE' ? 'selected' : ''}>근무 제외 (교문지도)</option>
+                        <option value="EXCLUDE_LUNCH" ${selVal === 'EXCLUDE_LUNCH' ? 'selected' : ''}>근무 제외 (급식)</option>
+                        <option value="EXCLUDE_CUSTOM" ${selVal === 'EXCLUDE_CUSTOM' ? 'selected' : ''}>근무 제외 (직접입력)</option>
+                    </select>
+                    ${selVal === 'EXCLUDE_CUSTOM' ? `
+                        <input type="text" value="${t.exclude || ''}" placeholder="사유 입력" class="admin-input table-input" 
+                            style="font-size:0.8rem; padding:2px 4px;" onchange="updateTeacherExcludeReason(${t.id}, this.value)" ${!isAdmin ? 'disabled' : ''}>
+                    ` : ''}
+                </div>
+            `;
+
+            const prevCheckHtml = `
+                <input type="checkbox" class="admin-input" ${t.prevSemesterEnd ? 'checked' : ''} 
+                    onchange="togglePrevSemesterEnd(${t.id}, this.checked)" ${!isAdmin ? 'disabled' : ''}>
+            `;
+
+            const dayCheckboxesHtml = days.map(d => {
+                const checked = t.offDays && t.offDays.includes(d) ? 'checked' : '';
+                return `
+                    <label>
+                        <input type="checkbox" class="admin-input" ${checked} 
+                            onchange="toggleTeacherOffDay(${t.id}, '${d}', this.checked)" ${!isAdmin ? 'disabled' : ''}>${d}
+                    </label>
+                `;
+            }).join('');
+
+            const leaveRangeHtml = `
+                <div class="date-range-box">
+                    <input type="date" value="${t.leaveStart || ''}" class="admin-input" onchange="updateTeacherLeave(${t.id}, 'start', this.value)" ${!isAdmin ? 'disabled' : ''}>
+                    ~
+                    <input type="date" value="${t.leaveEnd || ''}" class="admin-input" onchange="updateTeacherLeave(${t.id}, 'end', this.value)" ${!isAdmin ? 'disabled' : ''}>
+                </div>
+            `;
+
+            tr.innerHTML = `
+                <td>${locSelectHtml}</td>
+                <td><strong>${t.name}</strong></td>
+                <td>${excludeSelectHtml}</td>
+                <td>${prevCheckHtml}</td>
+                <td><div class="table-checkbox-group">${dayCheckboxesHtml}</div></td>
+                <td>${leaveRangeHtml}</td>
+                <td>
+                    <button class="secondary admin-btn" style="padding: 2px 6px; font-size: 0.78rem;" 
+                        onclick="removeTeacher(${t.id})" ${!isAdmin ? 'disabled' : ''}>삭제</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function updateTeacherLoc(id, newLoc) {
+        if (!isAdmin) return;
+        const t = teachers.find(item => item.id === id);
+        if (t) { t.loc = newLoc; saveStateToLocalStorage(); renderTeachers(); }
+    }
+
+    function updateTeacherExclude(id, selectedVal) {
+        if (!isAdmin) return;
+        const t = teachers.find(item => item.id === id);
+        if (!t) return;
+
+        if (selectedVal === 'NORMAL') {
+            t.exclude = '';
+        } else if (selectedVal === 'EXCLUDE_GATE') {
+            t.exclude = '교문지도';
+        } else if (selectedVal === 'EXCLUDE_LUNCH') {
+            t.exclude = '급식';
+        } else if (selectedVal === 'EXCLUDE_CUSTOM') {
+            if (!t.exclude || t.exclude === '교문지도' || t.exclude === '급식') {
+                const inputReason = prompt('제외 사유를 입력하세요 (예: 연로, 특정업무 등):', '기타');
+                t.exclude = inputReason ? inputReason.trim() : '기타';
+            }
+        }
+        saveStateToLocalStorage();
+        renderTeachers();
+    }
+
+    function updateTeacherExcludeReason(id, reasonText) {
+        if (!isAdmin) return;
+        const t = teachers.find(item => item.id === id);
+        if (t) {
+            t.exclude = reasonText.trim();
+            saveStateToLocalStorage();
+        }
+    }
+
+    function togglePrevSemesterEnd(id, isChecked) {
+        if (!isAdmin) return;
+        const t = teachers.find(item => item.id === id);
+        if (t) { t.prevSemesterEnd = isChecked; saveStateToLocalStorage(); }
+    }
+
+    function toggleTeacherOffDay(id, dayStr, isChecked) {
+        if (!isAdmin) return;
+        const t = teachers.find(item => item.id === id);
+        if (t) {
+            if (!t.offDays) t.offDays = [];
+            if (isChecked) {
+                if (!t.offDays.includes(dayStr)) t.offDays.push(dayStr);
+            } else {
+                t.offDays = t.offDays.filter(d => d !== dayStr);
+            }
+            saveStateToLocalStorage();
+        }
+    }
+
+    function updateTeacherLeave(id, type, value) {
+        if (!isAdmin) return;
+        const t = teachers.find(item => item.id === id);
+        if (t) {
+            if (type === 'start') t.leaveStart = value;
+            if (type === 'end') t.leaveEnd = value;
+            saveStateToLocalStorage();
+        }
+    }
+
+    function addTeacher() {
+        if (!isAdmin) return alert('🔒 관리자 권한이 필요합니다.');
+        
+        const loc = document.getElementById('targetLocation').value;
+        const name = document.getElementById('teacherName').value.trim();
+        const role = document.getElementById('teacherRole').value;
+        const customReason = document.getElementById('teacherExcludeCustom').value.trim();
+        const prevSemesterEnd = document.getElementById('prevSemesterEndCheck').checked;
+        const leaveStart = document.getElementById('regLeaveStart').value;
+        const leaveEnd = document.getElementById('regLeaveEnd').value;
+
+        if(!name) return alert('교사 이름을 입력하세요.');
+        
+        let exclude = '';
+        if (role === 'EXCLUDE_GATE') exclude = '교문지도';
+        else if (role === 'EXCLUDE_LUNCH') exclude = '급식';
+        else if (role === 'EXCLUDE_CUSTOM') exclude = customReason || '기타';
+
+        const offDays = [];
+        document.querySelectorAll('.off-day-check:checked').forEach(cb => offDays.push(cb.value));
+
+        teachers.push({ 
+            id: nextTeacherId++, 
+            name, 
+            exclude, 
+            loc, 
+            offDays, 
+            prevSemesterEnd, 
+            leaveStart, 
+            leaveEnd 
+        });
+
+        document.getElementById('teacherName').value = '';
+        document.getElementById('teacherRole').value = 'NORMAL';
+        document.getElementById('teacherExcludeCustom').value = '';
+        toggleExcludeReasonInput('NORMAL');
+        document.getElementById('prevSemesterEndCheck').checked = false;
+        document.getElementById('regLeaveStart').value = '';
+        document.getElementById('regLeaveEnd').value = '';
+        document.querySelectorAll('.off-day-check').forEach(cb => cb.checked = false);
+
+        saveStateToLocalStorage();
+        renderTeachers();
+        alert(`✅ ${name} 선생님이 명단에 등록되었습니다.`);
+    }
+
+    function removeTeacher(id) {
+        if (!isAdmin) return alert('🔒 관리자 권한이 필요합니다.');
+        const target = teachers.find(t => t.id === id);
+        if (target && confirm(`${target.name} 선생님을 삭제하시겠습니까?`)) {
+            teachers = teachers.filter(t => t.id !== id);
+            saveStateToLocalStorage();
+            renderTeachers();
+        }
+    }
+
+    function addSpecialDutyDate() {
+        if (!isAdmin) return alert('🔒 관리자 권한이 필요합니다.');
+        const dateStr = document.getElementById('specialDate').value;
+        const loc = document.getElementById('specialLoc').value;
+        const note = document.getElementById('specialNote').value.trim() || '주말/특별근무';
+
+        if (!dateStr) return alert('근무 날짜를 선택하세요.');
+
+        const exists = specialDutyDates.find(s => s.dateStr === dateStr && s.loc === loc);
+        if (exists) return alert('이미 해당 날짜와 장소에 특별 근무일이 등록되어 있습니다.');
+
+        specialDutyDates.push({ dateStr, loc, note, assignedTeacher: '' });
+        alert(`✅ ${dateStr} (${locNameMap[loc]}) 특별 근무일이 추가되었습니다.`);
+        document.getElementById('specialDate').value = '';
+        document.getElementById('specialNote').value = '';
+
+        saveStateToLocalStorage();
+        if (generatedSchedule.length > 0) generateSchedule('ALL');
+    }
+
+    function confirmAndGenerateSchedule(targetLoc = 'ALL') {
+        if (!isAdmin) return alert('🔒 관리자 권한이 필요합니다.');
+        const locTitle = targetLoc === 'ALL' ? '전체 장소' : locNameMap[targetLoc];
+        if (confirm(`🎲 [${locTitle}] 감독 배정을 자동 실행하시겠습니까?`)) {
+            generateSchedule(targetLoc);
+            alert(`✅ [${locTitle}] 감독 배치가 성공적으로 완성되었습니다!`);
+        }
+    }
+
+    function generateSchedule(targetLoc = 'ALL') {
+        const start = new Date(settings.startDate);
+        const end = new Date(settings.endDate);
+        
+        const dormEnd = new Date(settings.dormEndDate);
+        const study12End = new Date(settings.study12EndDate);
+        const study3End = new Date(settings.study3EndDate);
+
+        const isLocHoliday = (dateStr, locCode) => {
+            return holidays.some(h => h.dateStr === dateStr && (h.locs.includes('ALL') || h.locs.includes(locCode)));
+        };
+
+        const locTeachers = {
+            DORM: teachers.filter(t => !t.exclude && t.loc === 'DORM').map(t => ({...t, count: 0, lastIdx: t.prevSemesterEnd ? -5 : -99, friCount: 0})),
+            STUDY_12: teachers.filter(t => !t.exclude && t.loc === 'STUDY_12').map(t => ({...t, count: 0, lastIdx: t.prevSemesterEnd ? -5 : -99, friCount: 0})),
+            STUDY_3: teachers.filter(t => !t.exclude && t.loc === 'STUDY_3').map(t => ({...t, count: 0, lastIdx: t.prevSemesterEnd ? -5 : -99, friCount: 0}))
+        };
+
+        const existingMap = {};
+        generatedSchedule.forEach(r => existingMap[r.dateStr] = r);
+
+        let newSchedule = [];
+        let dayIdx = 0;
+        const daysKorean = ['일', '월', '화', '수', '목', '금', '토'];
+
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            const dayOfWeek = d.getDay();
+            const dateStr = d.toISOString().split('T')[0];
+            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+
+            const specialsForThisDate = specialDutyDates.filter(s => s.dateStr === dateStr);
+            if (isWeekend && specialsForThisDate.length === 0) continue;
+
+            const dayOfWeekStr = daysKorean[dayOfWeek];
+            const isFriday = (dayOfWeek === 5);
+
+            const dormHol = isLocHoliday(dateStr, 'DORM');
+            const study12Hol = isLocHoliday(dateStr, 'STUDY_12');
+            const study3Hol = isLocHoliday(dateStr, 'STUDY_3');
+
+            const holsForDate = holidays.filter(h => h.dateStr === dateStr);
+            let holidayNote = '';
+            if (holsForDate.length > 0) {
+                holidayNote = holsForDate.map(h => {
+                    const lTag = h.locs.includes('ALL') ? '' : `[${h.locs.map(l => locNameMap[l]||l).join(',')}] `;
+                    return `${lTag}${h.reason}`;
+                }).join(', ');
+            }
+
+            let prevRow = existingMap[dateStr] || {};
+            let row = {
+                dateStr,
+                month: d.getMonth() + 1,
+                day: d.getDate(),
+                dayOfWeekStr,
+                dorm: prevRow.dorm || 'X',
+                study12: prevRow.study12 || 'X',
+                study3: prevRow.study3 || 'X',
+                note: holidayNote || prevRow.note || '',
+                isFriday,
+                isWeekend
+            };
+
+            if (isWeekend || specialsForThisDate.length > 0) {
+                specialsForThisDate.forEach(sp => {
+                    const locKey = sp.loc.toLowerCase() === 'dorm' ? 'dorm' : sp.loc.toLowerCase() === 'study_12' ? 'study12' : 'study3';
+                    row[locKey] = sp.assignedTeacher || 'SELECT_APPLICANT';
+                    if (sp.note) row.note = sp.note;
+                });
+                newSchedule.push(row);
+                continue;
+            }
+
+            const pickTeacher = (list, dateIndex, isFri, currentDayStr, curDateStr) => {
+                const availableList = list.filter(t => {
+                    if (t.offDays && t.offDays.includes(currentDayStr)) return false;
+                    if (t.leaveStart && t.leaveEnd) {
+                        if (curDateStr >= t.leaveStart && curDateStr <= t.leaveEnd) return false;
+                    }
+                    return true;
+                });
+                
+                if (availableList.length === 0) return 'X (가능교사없음)';
+                
+                availableList.sort((a, b) => {
+                    if (isFri && a.friCount !== b.friCount) return a.friCount - b.friCount;
+                    if (a.count !== b.count) return a.count - b.count;
+                    const gapA = dateIndex - a.lastIdx;
+                    const gapB = dateIndex - b.lastIdx;
+                    if (gapA !== gapB) return gapB - gapA;
+                    return Math.random() - 0.5;
+                });
+
+                let selected = availableList[0];
+                selected.count++;
+                if (isFri) selected.friCount++;
+                selected.lastIdx = dateIndex;
+                return selected.name;
+            };
+
+            if (targetLoc === 'ALL' || targetLoc === 'DORM') {
+                row.dorm = (dormHol || d > dormEnd) ? 'X' : pickTeacher(locTeachers.DORM, dayIdx, isFriday, dayOfWeekStr, dateStr);
+            }
+            if (targetLoc === 'ALL' || targetLoc === 'STUDY_12') {
+                row.study12 = (study12Hol || d > study12End) ? 'X' : pickTeacher(locTeachers.STUDY_12, dayIdx, isFriday, dayOfWeekStr, dateStr);
+            }
+            if (targetLoc === 'ALL' || targetLoc === 'STUDY_3') {
+                row.study3 = (study3Hol || d > study3End) ? 'X' : pickTeacher(locTeachers.STUDY_3, dayIdx, isFriday, dayOfWeekStr, dateStr);
+            }
+
+            newSchedule.push(row);
+            dayIdx++;
+        }
+
+        generatedSchedule = newSchedule;
+        saveStateToLocalStorage();
+        renderSchedule();
+        renderStats();
+    }
+
+    function renderSchedule() {
+        const tbody = document.getElementById('scheduleTableBody');
+        tbody.innerHTML = '';
+
+        generatedSchedule.forEach(r => {
+            const tr = document.createElement('tr');
+            if (r.isWeekend) tr.classList.add('weekend-row');
+            else if (r.dorm === 'X' && r.study12 === 'X' && r.study3 === 'X') tr.classList.add('off-day');
+
+            const makeWeekendSelect = (locCode, currentVal) => {
+                if (!r.isWeekend && !specialDutyDates.some(s => s.dateStr === r.dateStr && s.loc === locCode)) {
+                    return r[locCode === 'DORM' ? 'dorm' : locCode === 'STUDY_12' ? 'study12' : 'study3'];
+                }
+
+                const filteredTeachers = teachers.filter(t => !t.exclude && t.loc === locCode);
+                let optionsHtml = `<option value="">-- 신청자 선택 --</option>`;
+                filteredTeachers.forEach(t => {
+                    const sel = (currentVal === t.name) ? 'selected' : '';
+                    optionsHtml += `<option value="${t.name}" ${sel}>${t.name}</option>`;
+                });
+
+                return `
+                    <select class="table-select admin-input" onchange="assignWeekendTeacher('${r.dateStr}', '${locCode}', this.value)" ${!isAdmin ? 'disabled' : ''}>
+                        ${optionsHtml}
+                    </select>
+                `;
+            };
+
+            const dormCell = r.isWeekend ? makeWeekendSelect('DORM', r.dorm) : r.dorm;
+            const study12Cell = r.isWeekend ? makeWeekendSelect('STUDY_12', r.study12) : r.study12;
+            const study3Cell = r.isWeekend ? makeWeekendSelect('STUDY_3', r.study3) : r.study3;
+
+            tr.innerHTML = `
+                <td>${r.month}</td>
+                <td>${r.day}</td>
+                <td>${r.dayOfWeekStr}</td>
+                <td>${dormCell}</td>
+                <td>${study12Cell}</td>
+                <td>${study3Cell}</td>
+                <td>${r.note}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function assignWeekendTeacher(dateStr, loc, teacherName) {
+        if (!isAdmin) return;
+        const target = specialDutyDates.find(s => s.dateStr === dateStr && s.loc === loc);
+        if (target) {
+            target.assignedTeacher = teacherName;
+        } else {
+            specialDutyDates.push({ dateStr, loc, note: '주말 특별근무', assignedTeacher: teacherName });
+        }
+
+        const row = generatedSchedule.find(r => r.dateStr === dateStr);
+        if (row) {
+            const locKey = loc.toLowerCase() === 'dorm' ? 'dorm' : loc.toLowerCase() === 'study_12' ? 'study12' : 'study3';
+            row[locKey] = teacherName || 'SELECT_APPLICANT';
+        }
+
+        saveStateToLocalStorage();
+        renderSchedule();
+        renderStats();
+    }
+
+    function renderStats() {
+        const summaryBody = document.getElementById('summaryTableBody');
+        summaryBody.innerHTML = '';
+
+        const teacherCounts = {};
+        teachers.forEach(t => {
+            teacherCounts[t.name] = { count: 0, friCount: 0, weekendCount: 0 };
+        });
+
+        generatedSchedule.forEach(r => {
+            ['dorm', 'study12', 'study3'].forEach(locKey => {
+                const name = r[locKey];
+                if (name && name !== 'X' && name !== 'X (가능교사없음)' && name !== 'SELECT_APPLICANT') {
+                    if (teacherCounts[name]) {
+                        if (r.isWeekend) {
+                            teacherCounts[name].weekendCount++;
+                        } else {
+                            teacherCounts[name].count++;
+                            if (r.isFriday) teacherCounts[name].friCount++;
+                        }
+                    }
+                }
+            });
+        });
+
+        const endDates = {
+            DORM: settings.dormEndDate,
+            STUDY_12: settings.study12EndDate,
+            STUDY_3: settings.study3EndDate
+        };
+
+        let statsSummary = [];
+
+        ['DORM', 'STUDY_12', 'STUDY_3'].forEach(loc => {
+            const list = teachers.filter(t => !t.exclude && t.loc === loc);
+            const totalDutySlots = list.reduce((sum, t) => sum + (teacherCounts[t.name] ? teacherCounts[t.name].count : 0), 0);
+            const teacherCount = list.length;
+            const avg = teacherCount > 0 ? (totalDutySlots / teacherCount) : 0;
+
+            statsSummary.push({
+                loc, name: locNameMap[loc], endDate: endDates[loc], dutySlots: totalDutySlots, teacherCount, avg: parseFloat(avg.toFixed(2))
+            });
+
+            summaryBody.innerHTML += `
+                <tr>
+                    <td><strong>${locNameMap[loc]}</strong></td>
+                    <td>${endDates[loc]}</td>
+                    <td>${totalDutySlots}석</td>
+                    <td>${teacherCount}명</td>
+                    <td><strong>${avg.toFixed(2)}회</strong></td>
+                </tr>
+            `;
+        });
+
+        generateBalanceRecommendation(statsSummary);
+
+        const hasWeekendDuties = specialDutyDates.length > 0;
+        const headerTr = document.getElementById('statTableHeader');
+        headerTr.innerHTML = `
+            <th>장소</th>
+            <th>이름</th>
+            <th>총 근무 횟수</th>
+            <th>금요일 근무 횟수</th>
+            ${hasWeekendDuties ? '<th style="background:#fef3c7; color:#92400e;">주말/공휴일 근무 횟수</th>' : ''}
+            <th>설정된 불가 요일/기간</th>
+            <th>배정 상태 및 검증 사유</th>
+        `;
+
+        const statBody = document.getElementById('teacherStatBody');
+        statBody.innerHTML = '';
+
+        teachers.forEach(t => {
+            const assignedInfo = teacherCounts[t.name] || { count: 0, friCount: 0, weekendCount: 0 };
+            const totalWithWeekend = assignedInfo.count + assignedInfo.weekendCount;
+
+            let restrictionText = [];
+            if (t.offDays && t.offDays.length > 0) restrictionText.push(`요일:${t.offDays.join(',')}`);
+            if (t.leaveStart && t.leaveEnd) restrictionText.push(`기간:${t.leaveStart}~${t.leaveEnd}`);
+            if (t.prevSemesterEnd) restrictionText.push(`직전학기말근무`);
+            
+            const restrictionDisplay = restrictionText.length > 0 ? restrictionText.join(' | ') : '없음';
+
+            let validationBadge = '';
+            if (t.exclude) {
+                validationBadge = `<span class="badge" style="background:#fecaca; color:#991b1b;">근무 제외 (${t.exclude})</span>`;
+            } else if (assignedInfo.friCount >= 2) {
+                validationBadge = `<span class="badge" style="background:#fef08a; color:#854d0e;">⚠️ 금요일 ${assignedInfo.friCount}회 (불가요일/기간 제약 사유)</span>`;
+            } else {
+                validationBadge = `<span class="badge" style="background:#dcfce7; color:#166534;">✅ 정상 (금요일 1회 이하 달성)</span>`;
+            }
+
+            statBody.innerHTML += `
+                <tr>
+                    <td>${locNameMap[t.loc]}</td>
+                    <td><strong>${t.name}</strong></td>
+                    <td>${t.exclude ? '-' : '<strong>' + totalWithWeekend + '회</strong> (평일:' + assignedInfo.count + ')'}</td>
+                    <td>${t.exclude ? '-' : assignedInfo.friCount + '회'}</td>
+                    ${hasWeekendDuties ? `<td style="background:#fffbeb; font-weight:bold; color:#b45309;">${assignedInfo.weekendCount}회</td>` : ''}
+                    <td style="font-size:0.8rem;">${restrictionDisplay}</td>
+                    <td style="text-align: left; padding-left: 8px;">${validationBadge}</td>
+                </tr>
+            `;
+        });
+    }
+
+    function generateBalanceRecommendation(stats) {
+        const scheduleContainer = document.getElementById('scheduleStickyNoteContainer');
+        const statContainer = document.getElementById('statStickyNoteContainer');
+
+        if (stats.length === 0) return;
+
+        stats.sort((a, b) => b.avg - a.avg);
+        const maxLoc = stats[0];
+        const minLoc = stats[stats.length - 1];
+        const diff = maxLoc.avg - minLoc.avg;
+
+        let html = '';
+        if (diff >= 0.4) {
+            const S1 = maxLoc.dutySlots, N1 = maxLoc.teacherCount;
+            const S2 = minLoc.dutySlots, N2 = minLoc.teacherCount;
+            
+            let moveCount = 1;
+            if (S1 + S2 > 0) {
+                const calculatedMove = Math.round((S1 * N2 - S2 * N1) / (S1 + S2));
+                if (calculatedMove > 0) moveCount = calculatedMove;
+            }
+
+            html = `
+                <div class="sticky-note">
+                    <p>⚠️ <strong>장소별 1인당 평균 평일 감독 횟수 격차 발생 (${diff.toFixed(2)}회 차이)</strong></p>
+                    <p>현재 <strong>[${maxLoc.name}]</strong> 1인당 평균은 <strong>${maxLoc.avg}회</strong>로 높고, <strong>[${minLoc.name}]</strong> 1인당 평균은 <strong>${minLoc.avg}회</strong>입니다.</p>
+                    <p>💡 <strong>인원 조정 추천</strong>: 장소 간 평균 근무 부담을 비슷하게 맞추려면 <strong>[${minLoc.name}]</strong>에서 <strong>[${maxLoc.name}]</strong>(으)로 <strong>${moveCount}명</strong>의 교사를 이동 배치하는 것을 권장합니다.</p>
+                </div>
+            `;
+        } else {
+            html = `
+                <div class="sticky-note" style="background-color: #dcfce7; border-color: #86efac; color: #14532d;">
+                    <p>✅ <strong>모든 장소의 감독 횟수 및 금요일 감독 배정이 매우 공정합니다!</strong></p>
+                    <p>(장소별 1인당 평균 감독 횟수 차이가 ${diff.toFixed(2)}회로 최적의 균형을 유지하고 있습니다.)</p>
+                </div>
+            `;
+        }
+
+        scheduleContainer.innerHTML = html;
+        statContainer.innerHTML = html;
+    }
+
+    function exportCSV() {
+        if (generatedSchedule.length === 0) return alert('먼저 감독 배정을 실행하세요.');
+
+        let csv = '\uFEFF월,일,요일,기숙사,여학생정독실/1.2자습실,3학년자습실,비고\n';
+        generatedSchedule.forEach(r => {
+            csv += `${r.month},${r.day},${r.dayOfWeekStr},"${r.dorm}","${r.study12}","${r.study3}","${r.note}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = '자기주도학습_감독배정표.csv';
+        link.click();
+    }
+
+    function renderAllViews() {
+        updateDateInputsUI();
+        renderHolidaysTable();
+        renderTeachers();
+        renderSchedule();
+        renderStats();
+    }
+
+    loadStateFromLocalStorage();
+    updateAdminUI();
+</script>
+</body>
+</html>
